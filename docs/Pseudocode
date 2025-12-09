@@ -1,0 +1,191 @@
+Program SistemManajemenInventarisGudang
+
+Kamus
+    const MAX_BARANG = 100
+    type Barang : record
+        kode      : string
+        nama      : string
+        kategori  : string
+        stok      : integer
+    endrecord
+
+    inventaris : array [1..MAX_BARANG] of Barang
+    nBarang    : integer
+    pilih      : character
+    konfirmasi : character
+    kodeInput, namaInput, kategoriInput : string
+    stokInput, jumlah : integer
+    i, idx    : integer
+    ditemukan : boolean
+    totalStok, stokKritis : integer
+
+Algoritma
+    nBarang ← 0
+
+    output("============================================")
+    output("   SISTEM MANAJEMEN INVENTARIS GUDANG")
+    output("============================================")
+
+    repeat
+        output("[1] Tambah Barang")
+        output("[2] Lihat Daftar Barang")
+        output("[3] Update Stok (Masuk/Keluar)")
+        output("[4] Hapus Barang")
+        output("[5] Laporan Ringkasan")
+        output("[6] Keluar")
+        output("Pilihan Anda: ")
+        input(pilih)
+
+        case pilih of
+            '1':
+                output("Tambah Barang Baru")
+                output("Kode barang (unik, contoh: BRG-001): ")
+                input(kodeInput)
+
+                ditemukan ← false
+                for i ← 1 to nBarang do
+                    if inventaris[i].kode = kodeInput then
+                        ditemukan ← true
+                    endif
+                endfor
+
+                if ditemukan = true then
+                    output("Kode barang sudah digunakan. Gagal menambahkan.")
+                else
+                    output("Nama barang: ")
+                    input(namaInput)
+                    output("Kategori: ")
+                    input(kategoriInput)
+                    output("Stok awal: ")
+                    input(stokInput)
+
+                    if stokInput < 0 then
+                        output("Stok tidak boleh negatif.")
+                    else
+                        nBarang ← nBarang + 1
+                        inventaris[nBarang].kode ← kodeInput
+                        inventaris[nBarang].nama ← namaInput
+                        inventaris[nBarang].kategori ← kategoriInput
+                        inventaris[nBarang].stok ← stokInput
+                        output("Barang berhasil ditambahkan!")
+                    endif
+                endif
+
+            '2':
+                if nBarang = 0 then
+                    output("Gudang masih kosong.")
+                else
+                    output("Daftar Barang (" + str(nBarang) + " item):")
+                    output("KODE      | NAMA               | KATEGORI     | STOK")
+                    output("----------|--------------------|--------------|-----")
+                    for i ← 1 to nBarang do
+                        output(inventaris[i].kode + " | " +
+                               inventaris[i].nama + " | " +
+                               inventaris[i].kategori + " | " +
+                               str(inventaris[i].stok) +
+                               (if inventaris[i].stok ≤ 5 then " <-- Stok kritis!" else ""))
+                    endfor
+                endif
+
+            '3':
+                output("Masukkan kode barang: ")
+                input(kodeInput)
+
+                idx ← -1
+                for i ← 1 to nBarang do
+                    if inventaris[i].kode = kodeInput then
+                        idx ← i
+                    endif
+                endfor
+
+                if idx = -1 then
+                    output("Barang tidak ditemukan.")
+                else
+                    output("Barang ditemukan: " + inventaris[idx].nama +
+                           " (Stok: " + str(inventaris[idx].stok) + ")")
+                    output("[1] Stok Masuk (tambah)")
+                    output("[2] Stok Keluar (kurangi)")
+                    input(pilih)
+
+                    if pilih ≠ '1' and pilih ≠ '2' then
+                        output("Pilihan tidak valid.")
+                    else
+                        output("Jumlah: ")
+                        input(jumlah)
+
+                        if jumlah ≤ 0 then
+                            output("Jumlah harus lebih dari nol.")
+                        else
+                            if pilih = '1' then
+                                inventaris[idx].stok ← inventaris[idx].stok + jumlah
+                                output("Stok bertambah --> " + str(inventaris[idx].stok) + " unit.")
+                            else
+                                if inventaris[idx].stok - jumlah < 0 then
+                                    output("Stok tidak cukup! Sisa: " + str(inventaris[idx].stok))
+                                else
+                                    inventaris[idx].stok ← inventaris[idx].stok - jumlah
+                                    output("Stok berkurang --> " + str(inventaris[idx].stok) + " unit.")
+                                endif
+                            endif
+                        endif
+                    endif
+                endif
+
+            '4':
+                output("Kode barang yang akan dihapus: ")
+                input(kodeInput)
+
+                idx ← -1
+                for i ← 1 to nBarang do
+                    if inventaris[i].kode = kodeInput then
+                        idx ← i
+                    endif
+                endfor
+
+                if idx = -1 then
+                    output("Barang tidak ditemukan.")
+                else
+                    output("Hapus barang '" + inventaris[idx].nama + "'? (y/n): ")
+                    input(konfirmasi)
+
+                    if konfirmasi = 'y' or konfirmasi = 'Y' then
+                        for i ← idx to nBarang - 1 do
+                            inventaris[i] ← inventaris[i + 1]
+                        endfor
+                        nBarang ← nBarang - 1
+                        output("Barang berhasil dihapus.")
+                    endif
+                endif
+
+            '5':
+                totalStok ← 0
+                stokKritis ← 0
+                for i ← 1 to nBarang do
+                    totalStok ← totalStok + inventaris[i].stok
+                    if inventaris[i].stok ≤ 5 then
+                        stokKritis ← stokKritis + 1
+                    endif
+                endfor
+
+                output("LAPORAN RINGKASAN:")
+                output("- Total jenis barang : " + str(nBarang))
+                output("- Total stok         : " + str(totalStok))
+                output("- Barang stok kritis : " + str(stokKritis))
+
+            '6':
+                output("Keluar dari program? (y/n): ")
+                input(konfirmasi)
+                if konfirmasi = 'y' or konfirmasi = 'Y' then
+                    output("Terima kasih! Sampai jumpa di gudang berikutnya.")
+                    break
+                endif
+
+            otherwise:
+                output("Pilihan tidak valid. Silakan coba lagi.")
+        endcase
+
+        output("--------------------------------------------")
+
+    until pilih = '6'
+
+EndProgram
